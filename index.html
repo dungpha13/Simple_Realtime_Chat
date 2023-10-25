@@ -7,22 +7,22 @@
     /* Add some simple CSS for styling */
   </style>
 </head>
+
 <body>
   <ul id="messages"></ul>
-  <input id="username" autocomplete="off" />
   <input id="message-input" autocomplete="off" /><button id="send">Send</button>
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
 
-    const username = document.getElementById('username')
+    const name = prompt("Enter your name sir?")
     const messages = document.getElementById('messages');
     const messagesInput = document.getElementById('message-input');
     const sendButton = document.getElementById('send');
 
     sendButton.addEventListener('click', () => {
       const payload = {
-        username: username.value,
+        name: name,
         messages: messagesInput.value,
       };
       socket.emit('chat message', payload);
@@ -31,7 +31,7 @@
 
     socket.on('response message', data => {
       const li = document.createElement('li');
-      li.textContent = `${data.username}: ${data.messages}`;
+      li.textContent = `${data.name}: ${data.messages}`;
       messages.appendChild(li);
     });
   </script>
