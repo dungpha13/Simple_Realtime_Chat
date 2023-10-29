@@ -1,39 +1,192 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 
 <head>
-  <title>Socket.IO Chat</title>
-  <style>
-    /* Add some simple CSS for styling */
-  </style>
+  <meta charset="UTF-8">
+  <title>Socket.IO Example</title>
 </head>
+<style>
+  #wrapper {
+    width: 600px;
+    margin: auto;
+  }
+
+  #left {
+    width: 30%;
+    float: left;
+    background-color: aquamarine;
+  }
+
+  #right {
+    width: 70%;
+    float: right;
+    background-color: rgb(135, 144, 206);
+    min-height: 315px;
+  }
+
+  #login-form {
+    display: block;
+  }
+
+  #chat-form {
+    padding-top: 5px;
+    display: none;
+  }
+
+  #boxTitle {
+    border: solid 1px black;
+    padding: 5px;
+    text-align: center;
+  }
+
+  #boxContent {
+    border: solid 1px black;
+    padding: 5px;
+    border-top: none;
+    text-align: center;
+    font-weight: bold;
+  }
+
+  #welcome {
+    text-align: right;
+  }
+
+  #message {
+    height: 245px;
+    padding-bottom: 5px;
+    background-color: antiquewhite;
+  }
+
+  #input {
+    padding-top: 3px;
+    padding-left: 5px;
+  }
+
+  #txtMessage {
+    width: 85%;
+  }
+</style>
 
 <body>
-  <ul id="messages"></ul>
-  <input id="message-input" autocomplete="off" /><button id="send">Send</button>
+  <h1>Socket.IO Example</h1>
+  <div id="wrapper">
+    <div id="login-form">
+      <h2>Your Name Sir?</h2>
+      <input type="text" id="txtUsername">
+      <input type="button" value="Register" id="btnRegister">
+      <div>
+        <span id="login-error"></span>
+      </div>
+    </div>
+    <div id="chat-form">
+      <div id="left">
+        <div id="boxTitle">Users Online</div>
+        <div id="boxContent"></div>
+      </div>
+      <div id="right">
+        <div id="welcome">
+          Hello <span id="currentUser"></span>
+          <input type="button" value="Logout" id="btnLogout">
+        </div>
+        <div id="message">
+          <ul id="list-message"></ul>
+        </div>
+        <div id="input">
+          <input type="text" id="txtMessage">
+          <input type="button" value="Send" id="btnSendMessage">
+        </div>
+
+      </div>
+    </div>
+  </div>
+
   <script src="/socket.io/socket.io.js"></script>
   <script>
-    const socket = io();
+    const socket = io("http://localhost:3000")
 
-    const name = prompt("Enter your name sir?")
-    const messages = document.getElementById('messages');
-    const messagesInput = document.getElementById('message-input');
-    const sendButton = document.getElementById('send');
+    const txtUsername = document.getElementById('txtUsername')
+    const btnRegister = document.getElementById('btnRegister')
+    const btnLogout = document.getElementById('btnLogout')
 
-    sendButton.addEventListener('click', () => {
-      const payload = {
-        name: name,
-        messages: messagesInput.value,
-      };
-      socket.emit('chat message', payload);
-      messagesInput.value = '';
-    });
+    const btnSendMessage = document.getElementById('btnSendMessage')
+    const txtMessage = document.getElementById('txtMessage')
 
-    socket.on('response message', data => {
+    btnSendMessage.addEventListener("click", () => {
+      const message = {
+        username: txtUsername.value,
+        message: txtMessage.value
+      }
+      socket.emit("message", message)
+      txtMessage.value = ''
+    })
+
+    btnRegister.addEventListener("click", () => {
+      console.log(txtUsername.value + " login");
+      socket.emit("register", txtUsername.value)
+    })
+
+    btnLogout.addEventListener("click", () => {
+      console.log(txtUsername.value + " logout");
+      socket.emit("logout", txtUsername.value)
+
+      const loginForm = document.getElementById('login-form');
+      loginForm.style.display = 'block';
+
+      const chatForm = document.getElementById('chat-form');
+      chatForm.style.display = 'none';
+    })
+
+    socket.on("message", data => {
+      const listmessage = document.getElementById("list-message")
       const li = document.createElement('li');
-      li.textContent = `${data.name}: ${data.messages}`;
-      messages.appendChild(li);
-    });
+      li.textContent = `${data.username}: ${data.message}`
+      listmessage.appendChild(li)
+    })
+
+    socket.on("list useronline", data => {
+      const boxContent = document.getElementById("boxContent")
+      boxContent.innerHTML = ""
+      data.forEach(i => {
+        const div = document.createElement('div')
+        div.textContent = `${i}`
+        boxContent.append(div)
+      })
+    })
+
+    socket.on("successfull", (data) => {
+      const currentUser = document.getElementById('currentUser')
+      currentUser.textContent = data;
+
+      const loginForm = document.getElementById('login-form');
+      loginForm.style.display = 'none';
+
+      const chatForm = document.getElementById('chat-form');
+      chatForm.style.display = 'block';
+    })
+
+    socket.on("failed", data => {
+      console.log(data);
+
+      const errorLoggin = document.getElementById('login-error')
+      errorLoggin.textContent = data;
+
+      const loginForm = document.getElementById('login-form');
+      loginForm.style.display = 'block';
+
+      const chatForm = document.getElementById('chat-form');
+      chatForm.style.display = 'none';
+    })
+
+    socket.on("logout complete", () => {
+      alert("Logout successfully!")
+      const loginForm = document.getElementById('login-form');
+      loginForm.style.display = 'block';
+
+      const chatForm = document.getElementById('chat-form');
+      chatForm.style.display = 'none';
+    })
+
+
   </script>
 </body>
 
